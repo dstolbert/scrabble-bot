@@ -1,4 +1,5 @@
-// Server side C program to demonstrate Socket programming
+
+// Socket ish
 #include <stdio.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -9,6 +10,8 @@
 #include <iostream>
 #include <string>
 #include <map>
+
+#include "Tile.hxx"
 
 using namespace std;
 
@@ -43,25 +46,40 @@ map<string, string> parseBuffer(char* buffer) {
     return request;
 };
 
+// Creates HTTP response from JSON formatted string body
+string createResponse(string body) {
+
+    // Construct raw header
+    string response = "HTTP/1.1 200 OK \n"
+                    "Server: Alpha-Master-Scrabble-Bot \n"
+                    "Content-Type: application/json \n";
+
+    // Add content length and spacer between header/body
+    string contentLength = "Content-Length: " + to_string(body.length()) + "\n\n";
+
+    // Add everything together
+    response.append(contentLength);
+    response.append(body);
+    
+    return response;
+};
+
+
 #define PORT 8080
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket; long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
+
+    auto test = Tile("", "test");
     
     string hello = "Hello from server";
     
     // Creating socket file descriptor, reuse if already bound
     int option = 1;
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-    // if (server_fd == 0)
-    // {
-    //     perror("In socket");
-    //     exit(EXIT_FAILURE);
-    // }
-    
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));    
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
@@ -69,7 +87,7 @@ int main(int argc, char const *argv[])
     
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     
-    
+    // Bind socket to port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
     {
         perror("In bind");
@@ -80,6 +98,8 @@ int main(int argc, char const *argv[])
         perror("In listen");
         exit(EXIT_FAILURE);
     }
+
+    // Listen for incoming requests
     while(1)
     {
         cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
@@ -96,6 +116,9 @@ int main(int argc, char const *argv[])
         cout << "header -> " << req.at("header") << endl;
         cout << "body -> " << req.at("body") << endl;
 
+        string response = createResponse("{tile:" + test.letter + "}");
+
+        write(new_socket, &response[0], response.length());
         close(new_socket);
     }
 

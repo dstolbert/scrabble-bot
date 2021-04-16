@@ -8,8 +8,7 @@ SERVER := scrabbleBot
 # Include
 LIB_INC := -I./include
 
-# Boost
-LIB_BST := -lboost_signals
+LIBS := ${LIB_INC}
 
 # Source
 SOURCES := $(shell find source -type f -iname '*.cxx')
@@ -21,6 +20,10 @@ OBJECTS := $(SOURCES:.cxx=.obj)
 all: $(SERVER)
 
 $(SERVER): $(OBJECTS) server.cxx
+	$(CXX) $(LIBS) $^ -o $@
+
+%.obj: %.cxx
+	$(CXX) $(LIBS) -c $< -o $@
 
 clean:
 	rm -f $(OBJECTS)
