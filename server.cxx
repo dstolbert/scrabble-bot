@@ -13,6 +13,7 @@
 
 #include "Tile.hxx"
 #include "Letter.hxx"
+#include "PlayerInfo.hxx"
 
 using namespace std;
 
@@ -116,9 +117,9 @@ int main(int argc, char const *argv[])
         cout << "body -> " << req.at("body") << endl;
 
         // Parse letters
-        auto letter = Letter(req.at("body"));
+        auto playerInfo = PlayerInfo(req.at("body"));
 
-        string response = createResponse("{\"square\":" + tile.square + ", \"letter\":" + tile.letter + "}");
+        string response = createResponse("{\"tilesInHand\":" + to_string(playerInfo.tilesInHand) + ", \"points\":" + to_string(playerInfo.points) + "}");
 
         write(new_socket, &response[0], response.length());
         close(new_socket);
