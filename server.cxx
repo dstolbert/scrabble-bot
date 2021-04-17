@@ -7,13 +7,16 @@
 #include <netinet/in.h>
 #include <string.h>
 
+// Handy helpers
 #include <iostream>
 #include <string>
 #include <map>
 
+// Alpha-Master-Scrabble-Bot objects
 #include "Tile.hxx"
 #include "Letter.hxx"
 #include "PlayerInfo.hxx"
+#include "InitializeRequest.hxx"
 
 using namespace std;
 
@@ -97,7 +100,13 @@ int main(int argc, char const *argv[])
     {
         perror("In listen");
         exit(EXIT_FAILURE);
-    }
+    };
+
+    // Dictionary of words
+    map<string, bool> dictionary;
+
+    // Map letter -> point
+    map<string, int> letterMap;
 
     // Listen for incoming requests
     while(1)
@@ -117,10 +126,15 @@ int main(int argc, char const *argv[])
         cout << "body -> " << req.at("body") << endl;
 
         // Parse letters
-        auto playerInfo = PlayerInfo(req.at("body"));
+        auto initializeRequest = InitializeRequest(req.at("body"));
 
-        string response = createResponse("{\"tilesInHand\":" + to_string(playerInfo.tilesInHand) + ", \"points\":" + to_string(playerInfo.points) + "}");
+        string response = createResponse(
+            "{ board: " + to_string(initializeRequest.board.size()) + ", " +
+                "words: " + to_string(initializeRequest.words.size()) + ", " +
+                "letters: " + to_string(initializeRequest.letters.size()) + " }"
+        );
 
+        // Write response over socket back to the client and close the socket
         write(new_socket, &response[0], response.length());
         close(new_socket);
     }

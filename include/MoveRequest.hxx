@@ -1,4 +1,7 @@
 
+
+#pragma once
+
 #include "Tile.hxx"
 #include "PlayerInfo.hxx"
 
