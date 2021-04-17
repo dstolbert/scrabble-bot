@@ -12,6 +12,7 @@
 #include <map>
 
 #include "Tile.hxx"
+#include "Letter.hxx"
 
 using namespace std;
 
@@ -71,8 +72,6 @@ int main(int argc, char const *argv[])
     int server_fd, new_socket; long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-
-    auto test = Tile("", "test");
     
     string hello = "Hello from server";
     
@@ -116,7 +115,10 @@ int main(int argc, char const *argv[])
         cout << "header -> " << req.at("header") << endl;
         cout << "body -> " << req.at("body") << endl;
 
-        string response = createResponse("{tile:" + test.letter + "}");
+        // Parse letters
+        auto letter = Letter(req.at("body"));
+
+        string response = createResponse("{\"square\":" + tile.square + ", \"letter\":" + tile.letter + "}");
 
         write(new_socket, &response[0], response.length());
         close(new_socket);
