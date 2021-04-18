@@ -76,12 +76,6 @@ int main(int argc, char const *argv[])
     // Init game
     auto game = new Game();
 
-    // Dictionary of words
-    map<string, bool> dictionary;
-
-    // Map letter -> point
-    map<string, int> letterMap;
-
     // Listen for incoming requests
     while(1)
     {
@@ -96,7 +90,6 @@ int main(int argc, char const *argv[])
         valread = read( new_socket , buffer, 30000);
         auto req = Request(buffer);
 
-        
         // Either update game with initialization request or generate next move
         string resBody;
         if (req.isInitializationRequest)    
