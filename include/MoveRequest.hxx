@@ -22,7 +22,7 @@ struct MoveRequest {
     vector<PlayerInfo> players;
 
     // Letters in my hand
-    string letters;
+    vector<string> letters;
 
     // My index in the players array
     int playerIndex;

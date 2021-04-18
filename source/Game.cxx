@@ -29,5 +29,16 @@ string Game::makeMove(Request req) {
 
     std::cout << "making a move \n";
 
+    // Parse move request
+    auto moveReq = MoveRequest(req.body);
+
+    // Find all available squares to start a word
+
+    // For each square, try every possible combination of letters and compute score
+
+    // Keep track of the highest scoring combination
+
+    // Once we have tried every combination or run out of time, return move
+
     return "";
 };

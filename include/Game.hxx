@@ -3,6 +3,7 @@
 
 #include "Request.hxx"
 #include "InitializeRequest.hxx"
+#include "MoveRequest.hxx"
 
 #include <string>
 #include <map>

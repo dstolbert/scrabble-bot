@@ -1,7 +1,7 @@
 
 #pragma once
 
-
+#include "Tile.hxx"
 #include <string>
 #include <vector>
 
@@ -17,3 +17,9 @@ string getSubStrFromIndexToTerminator(int index, string str, vector<char> termin
 
 // Splits a string by delimiter
 vector<string> splitByDelimiter(string str, string delimiter);
+
+// Parse board object from json
+vector<vector<Tile>> parseBoard(string json);
+
+// Parse a vector of words from a json string
+vector<string> parseWords(string json, string key); 
