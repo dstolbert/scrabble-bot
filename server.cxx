@@ -61,12 +61,14 @@ int main(int argc, char const *argv[])
     
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     
-    // Bind socket to port
+    // Bind socket to port, listen for errors when binding
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
     {
         perror("In bind");
         exit(EXIT_FAILURE);
     }
+
+    // Listen for errors when waiting for requests
     if (listen(server_fd, 10) < 0)
     {
         perror("In listen");
@@ -80,6 +82,8 @@ int main(int argc, char const *argv[])
     while(1)
     {
         cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
+
+        // Listen for errors when accepting requests
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
         {
             cout << "In accept" << endl;

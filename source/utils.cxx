@@ -40,3 +40,21 @@ string getSubStrFromIndexToTerminator(int index, string str,
 
     return str.substr(index, endIdx-index);
 };
+
+// Splits a string by delimiter
+vector<string> splitByDelimiter(string str, string delimiter) {
+
+    vector<string> split;
+
+    size_t pos = 0;
+    while ((pos = str.find(delimiter)) != string::npos) {
+        string token = str.substr(0, pos);
+        split.push_back(token);
+        str.erase(0, pos + delimiter.length());
+    };
+
+    // Add the remaining str to split
+    split.push_back(str);
+
+    return split;
+};

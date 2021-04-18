@@ -14,3 +14,6 @@ int findIndexAtEndOfSubString(string subString, string mainString);
 
 // Finds the substring from a given index until the first terminator is found
 string getSubStrFromIndexToTerminator(int index, string str, vector<char> terminators);
+
+// Splits a string by delimiter
+vector<string> splitByDelimiter(string str, string delimiter);
