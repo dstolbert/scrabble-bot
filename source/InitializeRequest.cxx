@@ -48,7 +48,7 @@ vector<vector<Tile>> parseBoard (string json) {
             board.push_back(
                 parseRow(
                     json.substr(
-                        // Parse from from the last opening bracket to the closing bracket we just found
+                        // Get substring between opening/closing brackets
                         lastOpeningBracket, 
                         lastClosingBracket - lastOpeningBracket + 1
             )));
@@ -68,16 +68,32 @@ InitializeRequest::InitializeRequest(string json) {
     
     board = parseBoard(json);
 
-    // Print board for confirmation
-    cout << "BOARD: \n";
-    for (auto i=0; i<board.size(); i++) {
-        cout << "ROW: ";
-        for (auto j=0; j<board.at(i).size(); j++) {
-            cout << "{ square: " << board.at(i).at(j).square << ", letter: " << board.at(i).at(j).letter << " }, ";
+    // Parse words
+    int startOfWords = findIndexAtEndOfSubString("\"words\":", json);
+
+    // Track opening/closing of double quotes
+    int openingQuote = -1;
+
+    for (auto i=startOfWords; i<json.length(); i++) {
+
+        // Start of word
+        if (json.at(i) == '\"' && openingQuote < 0)
+            openingQuote = i + 1;
+
+        // End of word
+        else if (json.at(i) == '\"') {
+            words.push_back(json.substr(openingQuote, i - openingQuote));
+            openingQuote = -1;
         }
-        cout << "\n";
+
+        // End of dictionary
+        else if (json.at(i) == ']')
+            break;
     };
 
-
+    cout << "WORDS: \n";
+    for (auto i=0; i<words.size(); i++) {
+        cout << words.at(i) << "\n";
+    }
 
 };
