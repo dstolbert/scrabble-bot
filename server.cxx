@@ -8,48 +8,21 @@
 #include <string.h>
 
 // Handy helpers
+#include <utils.hxx>
 #include <iostream>
 #include <string>
 #include <map>
 
 // Alpha-Master-Scrabble-Bot objects
+#include "Game.hxx"
 #include "Tile.hxx"
 #include "Letter.hxx"
+#include "Request.hxx"
 #include "PlayerInfo.hxx"
 #include "InitializeRequest.hxx"
 
 using namespace std;
 
-// Map request -> raw, header, body
-map<string, string> parseBuffer(char* buffer) {
-
-    // Parse buffer to string
-    string parsed(buffer);
-
-    // Extract JSON data
-    int firstIdx = -1;
-    int lastIdx = parsed.length();
-    for (auto i=0; i<parsed.length(); i++) {
-        const auto val = parsed[i];
-
-        // Find first opening bracket
-        if (firstIdx == -1 && val == '{') {
-            firstIdx = i;
-        }
-
-        // Find last closing bracket
-        else if (firstIdx >= 0 && val == '}') {
-            lastIdx = i;
-        };
-    };
-
-    map<string, string> request;
-    request["raw"] = parsed;
-    request["header"] = parsed.substr(0, firstIdx + 1);
-    request["body"] = parsed.substr(firstIdx, lastIdx - firstIdx + 1);
-
-    return request;
-};
 
 // Creates HTTP response from JSON formatted string body
 string createResponse(string body) {
@@ -77,8 +50,6 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     
-    string hello = "Hello from server";
-    
     // Creating socket file descriptor, reuse if already bound
     int option = 1;
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -102,6 +73,9 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     };
 
+    // Init game
+    auto game = new Game();
+
     // Dictionary of words
     map<string, bool> dictionary;
 
@@ -120,22 +94,21 @@ int main(int argc, char const *argv[])
         
         char buffer[30000] = {0};
         valread = read( new_socket , buffer, 30000);
-        auto req = parseBuffer(buffer);
+        auto req = Request(buffer);
 
-        cout << "header -> " << req.at("header") << endl;
-        cout << "body -> " << req.at("body") << endl;
+        
+        // Either update game with initialization request or generate next move
+        string resBody;
+        if (req.isInitializationRequest)    
+            resBody = game->update(req);
+        else 
+            resBody = game->makeMove(req);
 
-        // Parse letters
-        auto initializeRequest = InitializeRequest(req.at("body"));
-
-        string response = createResponse(
-            "{ board: " + to_string(initializeRequest.board.size()) + ", " +
-                "words: " + to_string(initializeRequest.words.size()) + ", " +
-                "letters: " + to_string(initializeRequest.letters.size()) + " }"
-        );
+        // Add response body to a valid response string
+        string res = createResponse(resBody);
 
         // Write response over socket back to the client and close the socket
-        write(new_socket, &response[0], response.length());
+        write(new_socket, &res[0], res.length());
         close(new_socket);
     }
 

@@ -15,6 +15,6 @@ struct InitializeRequest
 
     vector<vector<Tile>> board;
     vector<string> words;
-    map<string, Letter> letters;
+    map<string, int> letters;
 
 };
