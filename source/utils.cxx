@@ -32,7 +32,7 @@ string getSubStrFromIndexToTerminator(int index, string str,
                 
         }
 
-        // Break when endIdx has beens et
+        // Break when endIdx has been set
         if (endIdx == i)
             break;
             
