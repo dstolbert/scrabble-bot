@@ -1,5 +1,6 @@
 
 #include "Game.hxx"
+#include "utils.hxx"
 
 #include <iostream>
 
@@ -24,6 +25,7 @@ string Game::update(Request req) {
 
 };
 
+
 // Generate the next scrabble move
 string Game::makeMove(Request req) {
 
@@ -33,6 +35,7 @@ string Game::makeMove(Request req) {
     auto moveReq = MoveRequest(req.body);
 
     // Find all available squares to start a word
+    auto tileMap = findAvailableTiles(board);
 
     // For each square, try every possible combination of letters and compute score
 
@@ -42,3 +45,4 @@ string Game::makeMove(Request req) {
 
     return "";
 };
+

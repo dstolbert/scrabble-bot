@@ -11,6 +11,7 @@
 
 using namespace std;
 
+
 // A singleton to hold all game data
 class Game {
 
@@ -22,10 +23,13 @@ class Game {
         // Update game when initialization request comes in
         string update(Request req);
         
-        // Generate nexts move as a JSON formatted string
+        // Generate next move as a JSON formatted string
         string makeMove(Request req);
 
     private:
+        // Timeout (ms)
+        int timeToProcess = 1000;
+
         // Current state of the board
         vector<vector<Tile>> board;
 
@@ -34,5 +38,8 @@ class Game {
 
         // Map letters to points
         map<string, int> letters;
+
+        // Helpers
+        vector<Tile> findAvailableTiles(vector<vector<Tile>> board);
 
 };

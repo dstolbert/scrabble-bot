@@ -9,10 +9,14 @@ using namespace std;
 struct Tile 
 {
     // Constructor
-    Tile(string json);
+    Tile(string json, int row = -1, int col = -1);
 
     string square;
     string letter;
+    
+    // Position in board
+    int row;
+    int col;
 
 };
 
