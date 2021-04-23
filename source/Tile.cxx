@@ -19,8 +19,13 @@ Tile::Tile(string json, int _row, int _col) {
     square = getSubStrFromIndexToTerminator(startOfSquare, json, terminators);
 
     auto startOfLetter = findIndexAtEndOfSubString("\"letter\": ", json);
-    letter =  getSubStrFromIndexToTerminator(startOfLetter, json, terminators);
+    string rawLetter = getSubStrFromIndexToTerminator(startOfLetter, json, terminators);
 
+    // Remove any non-alpha chars from letter
+    for (auto& l: rawLetter) {
+        if (isalpha(l))
+            letter += l;
+    }
 };
 
 // Null tile constructor

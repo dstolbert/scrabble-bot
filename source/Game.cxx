@@ -69,7 +69,7 @@ string Game::makeMove(Request req) {
             string tileStr = "{sqaure: " + tile.square;
 
             // Add letter
-            tileStr += ", letter: " + tile.letter;
+            tileStr += ", letter: \"" + tile.letter + "\"";
 
             // Close item
             tileStr += "}";
@@ -103,6 +103,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
 
         // Find first available starting tile
         if (it.second == 2) {
+            
 
             auto startTile = it.first;
             auto nRows = board.size();
@@ -110,7 +111,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
 
             // Check how many letters we can play above start
             int aboveLetters = 0;
-            for (auto i=1; i < moveReq.letters.size(); i++) {
+            for (auto i=1; i <= moveReq.letters.size(); i++) {
 
                 if (startTile->row - i < 0)
                     break;
@@ -118,10 +119,9 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& aboveTile = board.at(startTile->row - i).at(startTile->col);
 
                 // Can only play above if tile below has a letter
-                if (board.at(startTile->row + 1).at(startTile->col).letter.size() <= 3)
+                if (board.at(startTile->row + 1).at(startTile->col).letter.size() != 0)
                     break;
                     
-
                 if (tileMap[&aboveTile] > 0)
                     aboveLetters++;
                 else
@@ -130,7 +130,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
 
             // Check how many letters we can play below start
             int belowLetters = 0;
-            for (auto i=1; i < moveReq.letters.size(); i++) {
+            for (auto i=1; i <= moveReq.letters.size(); i++) {
 
                 if (startTile->row + i >= nRows)
                     break;
@@ -138,7 +138,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& belowTile = board.at(startTile->row + i).at(startTile->col);
 
                 // Can only play below if tile above has a letter
-                if (board.at(startTile->row - 1).at(startTile->col).letter.size() <= 3)
+                if (board.at(startTile->row - 1).at(startTile->col).letter.size() != 0)
                     break;
                     
 
@@ -150,7 +150,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
 
             // Check how many letters we can play right of start
             int rightLetters = 0;
-            for (auto i=1; i < moveReq.letters.size(); i++) {
+            for (auto i=1; i <= moveReq.letters.size(); i++) {
 
                 if (startTile->col + i >= nCols)
                     break;
@@ -158,7 +158,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& rightTile = board.at(startTile->row).at(startTile->col + i);
 
                 // Can only play right if tile left has a letter
-                if (board.at(startTile->row).at(startTile->col - 1).letter.size() <= 3)
+                if (board.at(startTile->row).at(startTile->col - 1).letter.size() != 0)
                     break;                    
 
                 if (tileMap[&rightTile] > 0)
@@ -169,7 +169,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
 
             // Check how many letters we can play left of start
             int leftLetters = 0;
-            for (auto i=1; i < moveReq.letters.size(); i++) {
+            for (auto i=1; i <= moveReq.letters.size(); i++) {
 
                 if (startTile->col - i < 0)
                     break;
@@ -177,9 +177,8 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& leftTile = board.at(startTile->row).at(startTile->col - i);
 
                 // Can only play left if tile right has a letter
-                if (board.at(startTile->row).at(startTile->col + 1).letter.size() <= 3)
+                if (board.at(startTile->row).at(startTile->col + 1).letter.size() != 0)
                     break;
-                   
 
                 if (tileMap[&leftTile] > 0)
                     leftLetters++;
@@ -187,42 +186,43 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                     break;
             }
 
-            int score = -1;
+            int score = 0;
             vector<Tile> newTiles;
             int numPerms = factorial(moveReq.letters.size());
 
             // Ugly fix to move our tiles up/down/left/right
             int vFactor = 0;
             int hFactor = 0;
-
+            int maxWordSize = 0;
             if (aboveLetters >= belowLetters && aboveLetters >= rightLetters && aboveLetters >= leftLetters) {
-                startTile->row -= aboveLetters;
+                maxWordSize = aboveLetters + 1;
                 vFactor = 1;
             }
-                
+
             else if (belowLetters > aboveLetters && belowLetters > rightLetters && belowLetters > leftLetters) {
                 vFactor = 1;
+                maxWordSize = belowLetters + 1;
             }
-               
+
             else if (leftLetters >= belowLetters && leftLetters >= rightLetters && leftLetters >= aboveLetters) {
-                startTile->col -= leftLetters;
                 hFactor = 1;
+                maxWordSize = leftLetters + 1;
             }
-                
+
             else if (rightLetters > belowLetters && rightLetters > aboveLetters && rightLetters > leftLetters) {
                 hFactor = 1;
+                maxWordSize = rightLetters + 1;
             }
-                
 
             for (auto n=0; n<numPerms; n++) {
 
-                // Make random word from above starting from longest to shortest
+                // Make random word
                 auto word = getRandomWord(moveReq.letters, n);
 
                 // For each sub string of the word, get score
-                for (int subSize=1; subSize<aboveLetters; subSize++) {
+                for (int subSize=1; subSize<=maxWordSize; subSize++) {
 
-                    for (int subStart=0; (subStart + subSize)<aboveLetters; subStart+=subSize) {
+                    for (int subStart=0; (subStart + subSize)<maxWordSize; subStart+=subSize) {
                         vector<string> subWord(word.begin() + subStart, word.begin() + subStart + subSize);
 
                         // Add the random word to the board and check the score
@@ -236,7 +236,6 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                         };
 
                         score = scoreWord(newTiles, dictionary, board, letters);
-
                         if (score > 0) {
 
                             // Add word to board

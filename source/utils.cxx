@@ -177,7 +177,7 @@ map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile) {
     if (tile.row > 0) {
         auto& aboveTile = board.at(tile.row - 1).at(tile.col);
 
-        if (aboveTile.letter.size() > 3)
+        if (aboveTile.letter.size() > 0)
             tileRef[TileRef::ABOVE] = false;
     };
 
@@ -185,7 +185,7 @@ map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile) {
     if (tile.row < (nRows - 1)) {
         auto& belowTile = board.at(tile.row + 1).at(tile.col);
 
-        if (belowTile.letter.size() > 3)
+        if (belowTile.letter.size() > 0)
             tileRef[TileRef::BELOW] = false;
     }
 
@@ -193,7 +193,7 @@ map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile) {
     if (tile.col > 0) {
         auto& leftTile = board.at(tile.row).at(tile.col - 1);
 
-        if (leftTile.letter.size() > 3)
+        if (leftTile.letter.size() > 0)
             tileRef[TileRef::LEFT] = false;
     };
 
@@ -201,7 +201,7 @@ map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile) {
     if (tile.col < (nCols - 1)) {
         auto& rightTile = board.at(tile.row).at(tile.col + 1);
 
-        if (rightTile.letter.size() > 3)
+        if (rightTile.letter.size() > 0)
             tileRef[TileRef::RIGHT] = false;
     };
 
@@ -233,7 +233,7 @@ map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
             auto& tile = row.at(c);
 
             // If this tile already has a letter or we already checked it, it's not available
-            if (tile.letter.size() > 3 || tileMap[&tile])
+            if (tile.letter.size() > 0 || tileMap[&tile])
                 continue;
             
             auto tileRef = getTileRef(board, tile);
@@ -249,14 +249,14 @@ map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
                 one side. (i.e. don't try to make more than one word at a time)            
             */
             
-            if ((tile.square.find("st") != string::npos && tile.letter.size() <= 3) || nOpen == 3) {
+            if ((tile.square.find("st") != string::npos && tile.letter.size() == 0) || nOpen == 3) {
 
                 // These are our "starting tiles" flag with a 2
                 tileMap[&tile] = 2;
 
                 if (checkVertical) {
                     // Check how many tiles above we can play
-                    for (auto i=1; i<nTilesInHand; i++) {
+                    for (auto i=1; i<=nTilesInHand; i++) {
 
                         // Dont check after the end of the board
                         if ((r - i) < 0)
@@ -275,7 +275,7 @@ map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
                     };
 
                     // Check how many tiles below we can play
-                    for (auto i=1; i<nTilesInHand; i++) {
+                    for (auto i=1; i<=nTilesInHand; i++) {
 
                         // Dont check after the end of the board
                         if ((r + i) >= nRows)
@@ -296,7 +296,7 @@ map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
                 
                 if (checkHorizontal) {
                     // Check how many tiles to the right we can play
-                    for (auto i=1; i<nTilesInHand; i++) {
+                    for (auto i=1; i<=nTilesInHand; i++) {
 
                         // Dont check after the end of the board
                         if ((c + i) >= nCols)
@@ -315,7 +315,7 @@ map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
                     };
 
                     // Check how many tiles to the left we can play
-                    for (auto i=1; i<nTilesInHand; i++) {
+                    for (auto i=1; i<=nTilesInHand; i++) {
 
                         // Dont check after the end of the board
                         if ((c - i) < 0)
@@ -359,12 +359,6 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
 
     if (isRowIncreasing) {
 
-        // Sort the tiles by increasing row order
-        sort(tiles.begin(), tiles.end(), 
-        [](const Tile& a, const Tile& b) -> bool {
-            return a.row < b.row;
-        });
-
         // Append the tiles before/after the word
         if (tiles.at(0).row - 1 >= 0) {
             auto& firstTile = tiles.at(0);
@@ -372,7 +366,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the previous tile to check if it has a letter
             auto& prevTile = board.at(firstTile.row - 1).at(firstTile.col);
 
-            if (prevTile.letter.size() > 3) {
+            if (prevTile.letter.size() == 0) {
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -384,7 +378,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row + 1).at(lastTile.col);
 
-            if (nextTile.letter.size() > 3 || nextTile.square.find("st") != string::npos) {
+            if (nextTile.letter.size() == 0) {
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
@@ -392,11 +386,6 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
 
 
     } else {
-        // Sort the tiles by increasing col order
-        sort(tiles.begin(), tiles.end(), 
-        [](const Tile& a, const Tile& b) -> bool {
-            return a.col < b.col;
-        });
 
         // Append the tiles before/after the word
         if (tiles.at(0).col - 1 >= 0) {
@@ -405,7 +394,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the previous tile to check if it has a letter
             auto& prevTile = board.at(firstTile.row).at(firstTile.col - 1);
 
-            if (prevTile.letter.size() > 3 || prevTile.square.find("st") != string::npos) {
+            if (prevTile.letter.size() == 0) {
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -417,7 +406,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row).at(lastTile.col + 1);
 
-            if (nextTile.letter.size() > 3 || nextTile.square.find("st") != string::npos) {
+            if (nextTile.letter.size() == 0) {
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
