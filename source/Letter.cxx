@@ -14,16 +14,18 @@ Letter::Letter(string json) {
     // We know that the Letter json values end whenever a comma or closing bracket show up!
     vector<char> terminators = {',', '}'};
 
+    
+
     // find value
-    int startOfValue = findIndexAtEndOfSubString("\"value\": ", json);
-    value = stoi(getSubStrFromIndexToTerminator(startOfValue, json, terminators));
+    int startOfValue = findIndexAtEndOfSubString("\"value\":", json);
+    value = stoi(getSubStrFromIndexToTerminator(startOfValue+1, json, terminators));
 
     // find n
-    int startOfN = findIndexAtEndOfSubString("\"n\": ", json);
-    n = stoi(getSubStrFromIndexToTerminator(startOfN, json, terminators));
+    int startOfN = findIndexAtEndOfSubString("\"n\":", json);
+    n = stoi(getSubStrFromIndexToTerminator(startOfN+1, json, terminators));
 
     // find left
-    int startOfLeft = findIndexAtEndOfSubString("\"left\": ", json);
-    left = stoi(getSubStrFromIndexToTerminator(startOfLeft, json, terminators));
+    int startOfLeft = findIndexAtEndOfSubString("\"left\":", json);
+    left = stoi(getSubStrFromIndexToTerminator(startOfLeft+1, json, terminators));
 
 };

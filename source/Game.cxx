@@ -107,11 +107,16 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
 
         // Find first available starting tile
         if (it.second == 2) {
-            
 
             auto startTile = it.first;
             auto nRows = board.size();
             auto nCols = board.at(0).size();
+
+            int i=0;
+            for (auto& row: board) {
+                cout << "row " << i << " num cols " << row.size() << "\n";
+                i++;
+            }
 
             // Check how many letters we can play above start
             int aboveLetters = 0;
@@ -190,6 +195,8 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                     break;
             }
 
+            
+
             int numPerms = factorial(moveReq.letters.size());
 
             // Ugly fix to move our tiles up/down/left/right
@@ -215,6 +222,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 hFactor = 1;
                 maxWordSize = rightLetters + 1;
             }
+
            
             for (auto n=0; n<numPerms; n++) {
 

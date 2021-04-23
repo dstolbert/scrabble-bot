@@ -22,6 +22,9 @@ struct Request {
     // Method of the HTTP request
     string method;
 
+    // Content length
+    int contentLength;
+
     // Is this a Scrabble init request?
     bool isInitializationRequest;
 

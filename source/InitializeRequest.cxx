@@ -13,7 +13,7 @@ map<string, int> parseLetters(string json) {
     vector<char> terminators = {']'};
     int startOfLetters = findIndexAtEndOfSubString("\"letters\":", json);
     string letterStr = getSubStrFromIndexToTerminator(startOfLetters, json, terminators);
-    vector<string> letterMap = splitByDelimiter(letterStr, ",");
+    vector<string> letterMap = splitByDelimiter(letterStr, "},");
 
     for (auto i=0; i<letterMap.size(); i++) {
 
@@ -33,7 +33,9 @@ map<string, int> parseLetters(string json) {
  
             // Find numeric val
             else if (letterMap.at(i).at(j) == ':' && startOfLetter >= 0) {
-                val = stoi(letterMap.at(i).substr(j + 1, letterMap.at(i).size() - j));
+
+                auto letterObj = Letter(letterMap.at(i).substr(j + 1, letterMap.at(i).size() - j));
+                val = letterObj.value;
                 break;
             }
         };

@@ -21,6 +21,9 @@
 #include "PlayerInfo.hxx"
 #include "InitializeRequest.hxx"
 
+#include <thread>
+#include <chrono>
+
 using namespace std;
 
 
@@ -89,9 +92,18 @@ int main(int argc, char const *argv[])
             cout << "In accept" << endl;
             exit(EXIT_FAILURE);
         }
+
+        // First parse header so we know how much data to wait for
+        char headerBuffer[30000] = {0};
+        valread = recv(new_socket, headerBuffer, 30000, MSG_PEEK);
+        auto header = Request(headerBuffer);
+
+        this_thread::sleep_for (chrono::seconds(1));
         
-        char buffer[30000] = {0};
-        valread = read( new_socket , buffer, 30000);
+        const int BUFFNESS = 200000;
+        char buffer[BUFFNESS] = {0};
+        valread = read( new_socket , buffer, BUFFNESS);
+
         auto req = Request(buffer);
 
         // Either update game with initialization request or generate next move
