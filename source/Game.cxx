@@ -1,7 +1,7 @@
 
 #include "Game.hxx"
 #include "utils.hxx"
-
+#include <chrono>
 #include <iostream>
 
 // Constructor
@@ -98,6 +98,10 @@ string Game::makeMove(Request req) {
 // Find a scoreable word of a certain length
 void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
 
+    int bestScore = 0;
+    vector<Tile> bestWord;
+    auto start = chrono::system_clock::now();
+
     // For each square, try every possible combination of letters and compute score
     for (auto& it : tileMap) {
 
@@ -119,7 +123,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& aboveTile = board.at(startTile->row - i).at(startTile->col);
 
                 // Can only play above if tile below has a letter
-                if (board.at(startTile->row + 1).at(startTile->col).letter.size() != 0)
+                if (board.at(startTile->row + 1).at(startTile->col).letter.size() == 0)
                     break;
                     
                 if (tileMap[&aboveTile] > 0)
@@ -138,7 +142,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& belowTile = board.at(startTile->row + i).at(startTile->col);
 
                 // Can only play below if tile above has a letter
-                if (board.at(startTile->row - 1).at(startTile->col).letter.size() != 0)
+                if (board.at(startTile->row - 1).at(startTile->col).letter.size() == 0)
                     break;
                     
 
@@ -158,7 +162,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& rightTile = board.at(startTile->row).at(startTile->col + i);
 
                 // Can only play right if tile left has a letter
-                if (board.at(startTile->row).at(startTile->col - 1).letter.size() != 0)
+                if (board.at(startTile->row).at(startTile->col - 1).letter.size() == 0)
                     break;                    
 
                 if (tileMap[&rightTile] > 0)
@@ -177,7 +181,7 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 auto& leftTile = board.at(startTile->row).at(startTile->col - i);
 
                 // Can only play left if tile right has a letter
-                if (board.at(startTile->row).at(startTile->col + 1).letter.size() != 0)
+                if (board.at(startTile->row).at(startTile->col + 1).letter.size() == 0)
                     break;
 
                 if (tileMap[&leftTile] > 0)
@@ -186,8 +190,6 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                     break;
             }
 
-            int score = 0;
-            vector<Tile> newTiles;
             int numPerms = factorial(moveReq.letters.size());
 
             // Ugly fix to move our tiles up/down/left/right
@@ -213,8 +215,22 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 hFactor = 1;
                 maxWordSize = rightLetters + 1;
             }
-
+           
             for (auto n=0; n<numPerms; n++) {
+
+                // Return highest scored word after 15 secs
+                chrono::duration<double> elapsed = chrono::system_clock::now() - start;
+                if (elapsed.count() > 15) {
+                    std::cout << "timeout: " << elapsed.count() << endl;
+                    // Add word to board
+                    std::cout << "timeout! playing word: ";
+                    for (auto& tile: bestWord) {
+                        std::cout << tile.letter;
+                        board.at(tile.row).at(tile.col) = tile;
+                    }
+                    std::cout << "\n";
+                    return;
+                }
 
                 // Make random word
                 auto word = getRandomWord(moveReq.letters, n);
@@ -223,6 +239,8 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                 for (int subSize=1; subSize<=maxWordSize; subSize++) {
 
                     for (int subStart=0; (subStart + subSize)<maxWordSize; subStart+=subSize) {
+                        vector<Tile> newTiles;
+                        int score = 0;
                         vector<string> subWord(word.begin() + subStart, word.begin() + subStart + subSize);
 
                         // Add the random word to the board and check the score
@@ -236,25 +254,22 @@ void Game::findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap) {
                         };
 
                         score = scoreWord(newTiles, dictionary, board, letters);
-                        if (score > 0) {
-
-                            // Add word to board
-                            cout << "word: ";
-                            for (auto& tile: newTiles) {
-
-                                cout << tile.letter;
-
-                                board.at(tile.row).at(tile.col) = tile;
-                            }
-                            cout << "\n";
-
-                            return;
+                        if (score >= bestScore) {
+                            bestScore = score;
+                            bestWord = vector<Tile> (newTiles);
                         }
-                        else
-                            newTiles = {};
                     }
                 }
             };
         }
     }
+
+    // Add word to board
+    std::cout << "score: " << bestScore << endl;
+    std::cout << "playing word: ";
+    for (auto& tile: bestWord) {
+        std::cout << tile.letter;
+        board.at(tile.row).at(tile.col) = tile;
+    }
+    std::cout << "\n";
 }

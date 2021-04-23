@@ -366,7 +366,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the previous tile to check if it has a letter
             auto& prevTile = board.at(firstTile.row - 1).at(firstTile.col);
 
-            if (prevTile.letter.size() == 0) {
+            if (prevTile.letter.size() != 0) {
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -378,7 +378,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row + 1).at(lastTile.col);
 
-            if (nextTile.letter.size() == 0) {
+            if (nextTile.letter.size() != 0) {
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
@@ -394,7 +394,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the previous tile to check if it has a letter
             auto& prevTile = board.at(firstTile.row).at(firstTile.col - 1);
 
-            if (prevTile.letter.size() == 0) {
+            if (prevTile.letter.size() != 0) {
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -406,7 +406,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row).at(lastTile.col + 1);
 
-            if (nextTile.letter.size() == 0) {
+            if (nextTile.letter.size() != 0) {
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
