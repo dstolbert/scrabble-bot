@@ -46,4 +46,4 @@ map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile);
 int scoreWord(vector<Tile> tiles, vector<string> &dictionary, vector<vector<Tile>> &board, map<string, int> letterScores);
 
 // Gets random word in a deterministic pattern based on the seed value
-vector<string> getRandomWord(vector<string> letters, int maxLength, int seed);
+vector<string> getRandomWord(vector<string> letters, int seed);

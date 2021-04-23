@@ -249,7 +249,7 @@ map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
                 one side. (i.e. don't try to make more than one word at a time)            
             */
             
-            if (tile.square.find("st") != string::npos || nOpen == 3) {
+            if ((tile.square.find("st") != string::npos && tile.letter.size() <= 3) || nOpen == 3) {
 
                 // These are our "starting tiles" flag with a 2
                 tileMap[&tile] = 2;
@@ -357,15 +357,12 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
     // Check if we are increasing in row or col order
     bool isRowIncreasing = tiles.size() > 1 && tiles.at(0).row != tiles.at(1).row;
 
-    // Only a valid word if it touches an existing word (or crosses the starting square)
-    bool touchesWord = false;
-
     if (isRowIncreasing) {
 
         // Sort the tiles by increasing row order
         sort(tiles.begin(), tiles.end(), 
         [](const Tile& a, const Tile& b) -> bool {
-            return a.row > b.row;
+            return a.row < b.row;
         });
 
         // Append the tiles before/after the word
@@ -376,8 +373,6 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             auto& prevTile = board.at(firstTile.row - 1).at(firstTile.col);
 
             if (prevTile.letter.size() > 3) {
-                touchesWord = true;
-
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -389,9 +384,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row + 1).at(lastTile.col);
 
-            if (nextTile.letter.size() > 3) {
-                touchesWord = true;
-
+            if (nextTile.letter.size() > 3 || nextTile.square.find("st") != string::npos) {
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
@@ -402,7 +395,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
         // Sort the tiles by increasing col order
         sort(tiles.begin(), tiles.end(), 
         [](const Tile& a, const Tile& b) -> bool {
-            return a.col > b.col;
+            return a.col < b.col;
         });
 
         // Append the tiles before/after the word
@@ -412,9 +405,7 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the previous tile to check if it has a letter
             auto& prevTile = board.at(firstTile.row).at(firstTile.col - 1);
 
-            if (prevTile.letter.size() > 3) {
-                touchesWord = true;
-
+            if (prevTile.letter.size() > 3 || prevTile.square.find("st") != string::npos) {
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -426,17 +417,12 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row).at(lastTile.col + 1);
 
-            if (nextTile.letter.size() > 3) {
-                touchesWord = true;
-
+            if (nextTile.letter.size() > 3 || nextTile.square.find("st") != string::npos) {
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
         };
     }
-
-    if (!touchesWord)
-        return -1;
 
     // Get the letters of the word
     string word;
@@ -478,19 +464,18 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
 };
 
 
-// Gets random word in a deterministic pattern based on the seed value
-vector<string> getRandomWord(vector<string> letters, int maxLength, int seed) {
-
-    vector<string> word;
+// Gets random word
+vector<string> getRandomWord(vector<string> letters, int seed) {
 
     int permIdx = 0;
     do {
         
         if (permIdx == seed)
-            return vector<string> (letters.begin(), letters.begin() + maxLength);
+            return vector<string> (letters.begin(), letters.end());
 
         permIdx++;
 
     } while(next_permutation(letters.begin(), letters.end()));
 
+    return letters;
 }

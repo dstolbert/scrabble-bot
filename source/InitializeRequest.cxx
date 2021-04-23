@@ -10,7 +10,7 @@ map<string, int> parseLetters(string json) {
     map<string, int> letters;
     
     // Parse letter scores
-    vector<char> terminators = {'}'};
+    vector<char> terminators = {']'};
     int startOfLetters = findIndexAtEndOfSubString("\"letters\":", json);
     string letterStr = getSubStrFromIndexToTerminator(startOfLetters, json, terminators);
     vector<string> letterMap = splitByDelimiter(letterStr, ",");

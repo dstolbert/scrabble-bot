@@ -26,6 +26,9 @@ class Game {
         // Generate next move as a JSON formatted string
         string makeMove(Request req);
 
+        // Find a scoreable word of a certain length
+        void findScoreableWord(MoveRequest &moveReq, map<Tile *, int> &tileMap);
+
     private:
         // Timeout (ms)
         int timeToProcess = 1000;
