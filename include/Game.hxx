@@ -39,7 +39,4 @@ class Game {
         // Map letters to points
         map<string, int> letters;
 
-        // Helpers
-        vector<Tile> findAvailableTiles(vector<vector<Tile>> board);
-
 };

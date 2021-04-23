@@ -9,7 +9,8 @@ using namespace std;
 struct Tile 
 {
     // Constructor
-    Tile(string json, int row = -1, int col = -1);
+    Tile(string json, int _row = -1, int _col = -1);
+    Tile();
 
     string square;
     string letter;
@@ -19,4 +20,7 @@ struct Tile
     int col;
 
 };
+
+// Comparison operator
+bool operator<(const Tile &a, const Tile &b);
 

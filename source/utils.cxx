@@ -118,6 +118,7 @@ vector<vector<Tile>> parseBoard (string json) {
 
     // Track if we last saw an opening or closing bracket
     bool lastUpdateClosing = false;
+    int rowIdx = 0;
 
     for (auto i=startOfBoard; i<json.length(); i++) {
 
@@ -138,9 +139,11 @@ vector<vector<Tile>> parseBoard (string json) {
                         lastOpeningBracket, 
                         lastClosingBracket - lastOpeningBracket + 1
                         ),
-                    i // row index
+                    rowIdx // row index
                 )
             );
+
+            rowIdx++;
         }
 
         // Found the end of the board
@@ -174,34 +177,31 @@ map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile) {
     if (tile.row > 0) {
         auto& aboveTile = board.at(tile.row - 1).at(tile.col);
 
-        if (aboveTile.letter != "")
+        if (aboveTile.letter.size() > 3)
             tileRef[TileRef::ABOVE] = false;
     };
 
     // Check below
-    bool openBelow = true;
     if (tile.row < (nRows - 1)) {
         auto& belowTile = board.at(tile.row + 1).at(tile.col);
 
-        if (belowTile.letter != "")
+        if (belowTile.letter.size() > 3)
             tileRef[TileRef::BELOW] = false;
     }
 
     // Check left
-    bool openLeft = true;
     if (tile.col > 0) {
         auto& leftTile = board.at(tile.row).at(tile.col - 1);
 
-        if (leftTile.letter != "")
+        if (leftTile.letter.size() > 3)
             tileRef[TileRef::LEFT] = false;
     };
 
     // Check right
-    bool openRight = true;
     if (tile.col < (nCols - 1)) {
         auto& rightTile = board.at(tile.row).at(tile.col + 1);
 
-        if (rightTile.letter != "")
+        if (rightTile.letter.size() > 3)
             tileRef[TileRef::RIGHT] = false;
     };
 
@@ -209,10 +209,10 @@ map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile) {
 };
 
 // Finds all tiles in hand that are available to be played on
-map<Tile, bool> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand) {
+map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand) {
 
     // Create a map from Tile -> availability
-    map<Tile, bool> tileMap;
+    map<Tile*, int> tileMap;
 
     // Ensure we don't have empty vectors
     if (board.size() == 0 || board.at(0).size() == 0)
@@ -233,98 +233,106 @@ map<Tile, bool> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
             auto& tile = row.at(c);
 
             // If this tile already has a letter or we already checked it, it's not available
-            if (tile.letter != "" || tileMap[tile])
+            if (tile.letter.size() > 3 || tileMap[&tile])
                 continue;
-
+            
             auto tileRef = getTileRef(board, tile);
             int nOpen = ( tileRef[TileRef::ABOVE] + tileRef[TileRef::BELOW] + 
                 tileRef[TileRef::LEFT] + tileRef[TileRef::RIGHT] );
+
+            // For simplicity, only make words orthogonally to existing words
+            bool checkHorizontal = tileRef[TileRef::BELOW] || tileRef[TileRef::ABOVE];
+            bool checkVertical = tileRef[TileRef::LEFT] || tileRef[TileRef::RIGHT];
             
             /* 
                 For simplicity, only consider a tile open if it touches on just
                 one side. (i.e. don't try to make more than one word at a time)            
             */
             
-            if (tile.square == "st" || nOpen == 3) {
+            if (tile.square.find("st") != string::npos || nOpen == 3) {
 
-                // Track the current tile
-                tileMap[tile] = true;
+                // These are our "starting tiles" flag with a 2
+                tileMap[&tile] = 2;
 
-                // Check how many tiles above we can play
-                for (auto i=1; i<nTilesInHand; i++) {
+                if (checkVertical) {
+                    // Check how many tiles above we can play
+                    for (auto i=1; i<nTilesInHand; i++) {
 
-                    // Dont check after the end of the board
-                    if ((r - i) < 0)
-                        break;
+                        // Dont check after the end of the board
+                        if ((r - i) < 0)
+                            break;
 
-                    auto& aboveTile = board.at(r).at(c + i);
-                    auto aboveTileRef = getTileRef(board, aboveTile);
-                    nOpen = ( aboveTileRef[TileRef::ABOVE] + aboveTileRef[TileRef::BELOW] + 
-                        aboveTileRef[TileRef::LEFT] + aboveTileRef[TileRef::RIGHT] );
+                        auto& aboveTile = board.at(r - i).at(c);
+                        auto aboveTileRef = getTileRef(board, aboveTile);
+                        nOpen = ( aboveTileRef[TileRef::ABOVE] + aboveTileRef[TileRef::BELOW] + 
+                            aboveTileRef[TileRef::LEFT] + aboveTileRef[TileRef::RIGHT] );
 
-                    // Only keep if all 4 sides are open, stop checking otherwise
-                    if (nOpen == 4)
-                        tileMap[aboveTile] = true;
-                    else
-                        break;
-                };
+                        // Only keep if all 4 sides are open, stop checking otherwise
+                        if (nOpen == 4)
+                            tileMap[&aboveTile] = true;
+                        else
+                            break;
+                    };
 
-                // Check how many tiles below we can play
-                for (auto i=1; i<nTilesInHand; i++) {
+                    // Check how many tiles below we can play
+                    for (auto i=1; i<nTilesInHand; i++) {
 
-                    // Dont check after the end of the board
-                    if ((r + i) >= nRows)
-                        break;
+                        // Dont check after the end of the board
+                        if ((r + i) >= nRows)
+                            break;
 
-                    auto& belowTile = board.at(r).at(c + i);
-                    auto belowTileRef = getTileRef(board, belowTile);
-                    nOpen = ( belowTileRef[TileRef::ABOVE] + belowTileRef[TileRef::BELOW] + 
-                        belowTileRef[TileRef::LEFT] + belowTileRef[TileRef::RIGHT] );
+                        auto& belowTile = board.at(r + i).at(c);
+                        auto belowTileRef = getTileRef(board, belowTile);
+                        nOpen = ( belowTileRef[TileRef::ABOVE] + belowTileRef[TileRef::BELOW] + 
+                            belowTileRef[TileRef::LEFT] + belowTileRef[TileRef::RIGHT] );
 
-                    // Only keep if all 4 sides are open, stop checking otherwise
-                    if (nOpen == 4)
-                        tileMap[belowTile] = true;
-                    else
-                        break;
-                };
+                        // Only keep if all 4 sides are open, stop checking otherwise
+                        if (nOpen == 4)
+                            tileMap[&belowTile] = true;
+                        else
+                            break;
+                    };
+                }
+                
+                if (checkHorizontal) {
+                    // Check how many tiles to the right we can play
+                    for (auto i=1; i<nTilesInHand; i++) {
 
-                // Check how many tiles to the right we can play
-                for (auto i=1; i<nTilesInHand; i++) {
+                        // Dont check after the end of the board
+                        if ((c + i) >= nCols)
+                            break;
 
-                    // Dont check after the end of the board
-                    if ((c + i) >= nCols)
-                        break;
+                        auto& rightTile = board.at(r).at(c + i);
+                        auto rightTileRef = getTileRef(board, rightTile);
+                        nOpen = ( rightTileRef[TileRef::ABOVE] + rightTileRef[TileRef::BELOW] + 
+                            rightTileRef[TileRef::LEFT] + rightTileRef[TileRef::RIGHT] );
 
-                    auto& rightTile = board.at(r).at(c + i);
-                    auto rightTileRef = getTileRef(board, rightTile);
-                    nOpen = ( rightTileRef[TileRef::ABOVE] + rightTileRef[TileRef::BELOW] + 
-                        rightTileRef[TileRef::LEFT] + rightTileRef[TileRef::RIGHT] );
+                        // Only keep if all 4 sides are open, stop checking otherwise
+                        if (nOpen == 4)
+                            tileMap[&rightTile] = true;
+                        else
+                            break;
+                    };
 
-                    // Only keep if all 4 sides are open, stop checking otherwise
-                    if (nOpen == 4)
-                        tileMap[rightTile] = true;
-                    else
-                        break;
-                };
+                    // Check how many tiles to the left we can play
+                    for (auto i=1; i<nTilesInHand; i++) {
 
-                // Check how many tiles to the left we can play
-                for (auto i=1; i<nTilesInHand; i++) {
+                        // Dont check after the end of the board
+                        if ((c - i) < 0)
+                            break;
 
-                    // Dont check after the end of the board
-                    if ((c - i) < 0)
-                        break;
+                        auto& leftTile = board.at(r).at(c - i);
+                        auto leftTileRef = getTileRef(board, leftTile);
+                        nOpen = ( leftTileRef[TileRef::ABOVE] + leftTileRef[TileRef::BELOW] + 
+                            leftTileRef[TileRef::LEFT] + leftTileRef[TileRef::RIGHT] );
 
-                    auto& leftTile = board.at(r).at(c + i);
-                    auto leftTileRef = getTileRef(board, leftTile);
-                    nOpen = ( leftTileRef[TileRef::ABOVE] + leftTileRef[TileRef::BELOW] + 
-                        leftTileRef[TileRef::LEFT] + leftTileRef[TileRef::RIGHT] );
-
-                    // Only keep if all 4 sides are open, stop checking otherwise
-                    if (nOpen == 4)
-                        tileMap[leftTile] = true;
-                    else
-                        break;
-                };
+                        // Only keep if all 4 sides are open, stop checking otherwise
+                        if (nOpen == 4)
+                            tileMap[&leftTile] = true;
+                        else
+                            break;
+                    };
+                }
 
             }            
         }
@@ -335,6 +343,7 @@ map<Tile, bool> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand
 
 // A big dirty function to check if the word is valid and score it
 // NOTE: This function will only check validity along the primary axis of the word
+// it will also only check one tile passed the given tiles!
 int scoreWord(vector<Tile> tiles, vector<string> &dictionary, 
     vector<vector<Tile>> &board, map<string, int> letterScores) {
 
@@ -346,7 +355,10 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
     int nCols = board.at(0).size();
 
     // Check if we are increasing in row or col order
-    bool isRowIncreasing = tiles.at(0).row != tiles.at(1).row;
+    bool isRowIncreasing = tiles.size() > 1 && tiles.at(0).row != tiles.at(1).row;
+
+    // Only a valid word if it touches an existing word (or crosses the starting square)
+    bool touchesWord = false;
 
     if (isRowIncreasing) {
 
@@ -363,7 +375,9 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the previous tile to check if it has a letter
             auto& prevTile = board.at(firstTile.row - 1).at(firstTile.col);
 
-            if (prevTile.letter != "") {
+            if (prevTile.letter.size() > 3) {
+                touchesWord = true;
+
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -375,7 +389,9 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row + 1).at(lastTile.col);
 
-            if (nextTile.letter != "") {
+            if (nextTile.letter.size() > 3) {
+                touchesWord = true;
+
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
@@ -396,7 +412,9 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the previous tile to check if it has a letter
             auto& prevTile = board.at(firstTile.row).at(firstTile.col - 1);
 
-            if (prevTile.letter != "") {
+            if (prevTile.letter.size() > 3) {
+                touchesWord = true;
+
                 // Insert the first tile prior to the word into the vector
                 tiles.insert(tiles.begin(), prevTile);
             }            
@@ -408,12 +426,17 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             // Grab the next tile to check if it has a letter
             auto& nextTile = board.at(lastTile.row).at(lastTile.col + 1);
 
-            if (nextTile.letter != "") {
+            if (nextTile.letter.size() > 3) {
+                touchesWord = true;
+
                 // Append the tile to the end of the tiles vector
                 tiles.push_back(nextTile);
             }           
         };
     }
+
+    if (!touchesWord)
+        return -1;
 
     // Get the letters of the word
     string word;
@@ -431,22 +454,18 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
             int letterScore = letterScores[tile.letter];
 
             // Handle tile bonuses
-            if (tile.square == " " || tile.square == "st")
-                score += letterScore;
-            else if (tile.square == "dl")
+            if (tile.square.find("dl") != string::npos)
                 score += (letterScore * 2);
-            else if (tile.square == "tl")
+            else if (tile.square.find("tl") != string::npos)
                 score += (letterScore * 3);
-            else if (tile.square == "dw") {
+            else if (tile.square.find("dw") != string::npos) {
                 score += letterScore;
                 multiplier *= 2;
             }
-            else if (tile.square == "tw") {
+            else if (tile.square.find("tw") != string::npos) {
                 score += letterScore;
                 multiplier *= 3;
             }
-
-            // And an extra else just to be safe
             else 
                 score += letterScore;
             
@@ -457,3 +476,21 @@ int scoreWord(vector<Tile> tiles, vector<string> &dictionary,
 
     return -1;
 };
+
+
+// Gets random word in a deterministic pattern based on the seed value
+vector<string> getRandomWord(vector<string> letters, int maxLength, int seed) {
+
+    vector<string> word;
+
+    int permIdx = 0;
+    do {
+        
+        if (permIdx == seed)
+            return vector<string> (letters.begin(), letters.begin() + maxLength);
+
+        permIdx++;
+
+    } while(next_permutation(letters.begin(), letters.end()));
+
+}

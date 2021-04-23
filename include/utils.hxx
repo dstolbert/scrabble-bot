@@ -14,7 +14,7 @@ enum TileRef
     ABOVE=0,
     BELOW=1,
     LEFT=2,
-    RIGHT=3
+    RIGHT=3,
 };
 
 /* 
@@ -37,10 +37,13 @@ vector<vector<Tile>> parseBoard(string json);
 vector<string> parseWords(string json, string key); 
 
 // Find all available tiles to play on in a board
-map<Tile, bool> findAvailableTiles(vector<vector<Tile>> &board);
+map<Tile*, int> findAvailableTiles(vector<vector<Tile>> &board, int nTilesInHand);
 
 // Finds the number of open tiles around a give tile
 map<int, bool> getTileRef(vector<vector<Tile>> &board, Tile tile);
 
 // Finds the score of the provided word, if invalid -1
-int scoreWord(vector<Tile> tiles, vector<string> &dictionary, vector<vector<Tile>> &board);
+int scoreWord(vector<Tile> tiles, vector<string> &dictionary, vector<vector<Tile>> &board, map<string, int> letterScores);
+
+// Gets random word in a deterministic pattern based on the seed value
+vector<string> getRandomWord(vector<string> letters, int maxLength, int seed);
